@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ST. LOUIS APARTMENTS - Rental Management</title>
+        <link rel="stylesheet" href="styles.css">
+    
+        <!-- ✅ Firebase SDKs -->
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+        <!-- Other libraries -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    </head>
+    
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>ST. LOUIS APARTMENTS</h1>
+                <p>Rental Management System</p>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
+            <button class="nav-btn" onclick="showSection('tenants')">Tenants</button>
+            <button class="nav-btn" onclick="showSection('payments')">Payments</button>
+            <button class="nav-btn" onclick="showSection('receipts')">Receipts</button>
+        </nav>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Monthly Income</h3>
+                    <p class="income-amount" id="monthlyIncome">KSh 0</p>
+                </div>
+                <div class="card">
+                    <h3>Yearly Income</h3>
+                    <p class="income-amount" id="yearlyIncome">KSh 0</p>
+                </div>
+                <div class="card">
+                    <h3>Occupied Rooms</h3>
+                    <p class="stat-number" id="occupiedRooms">0/17</p>
+                </div>
+                <div class="card">
+                    <h3>Vacant Rooms</h3>
+                    <p class="stat-number" id="vacantRooms">17/17</p>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn-warning" onclick="editIncome('monthly')">
+                  ✏️ Edit Monthly Income
+                </button>
+                <button class="btn-warning" onclick="editIncome('yearly')">
+                  ✏️ Edit Yearly Income
+                </button>
+              </div>
+              
+              
+
+            <div class="room-status">
+                <div class="room-type">
+                    <h3>Bedsitters (KSh 5,500)</h3>
+                    <div class="room-grid" id="bedsitterStatus"></div>
+                </div>
+                <div class="room-type">
+                    <h3>One Bedroom (KSh 6,500)</h3>
+                    <div class="room-grid" id="oneBedroomStatus"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tenants Section -->
+        <section id="tenants" class="section">
+            <div class="section-header">
+                <h2>Tenant Management</h2>
+                <button class="btn-primary" onclick="showAddTenantForm()">Add New Tenant</button>
+            </div>
+
+            <!-- Add Tenant Form -->
+            <div id="addTenantForm" class="form-container" style="display: none;">
+                <h3>Add New Tenant</h3>
+                <form id="tenantForm">
+                    <div class="form-group">
+                        <label for="fullName">Full Names *</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="idNumber">ID Number *</label>
+                        <input type="text" id="idNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number *</label>
+                        <input type="tel" id="phoneNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email (Optional)</label>
+                        <input type="email" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="roomNumber">Room Number *</label>
+                        <select id="roomNumber" required>
+                            <option value="">Select Room</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Save Tenant</button>
+                        <button type="button" class="btn-secondary" onclick="hideAddTenantForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tenant Tables -->
+            <div class="tenant-tables">
+                <div class="table-container">
+                    <h3>Bedsitter Tenants</h3>
+                    <table id="bedsitterTable">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Full Name</th>
+                                <th>ID Number</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="table-container">
+                    <h3>One Bedroom Tenants</h3>
+                    <table id="oneBedroomTable">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Full Name</th>
+                                <th>ID Number</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payments Section -->
+        <section id="payments" class="section">
+            <div class="section-header">
+                <h2>Payment Recording</h2>
+            </div>
+
+            <div class="form-container">
+                <h3>Record Payment</h3>
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label for="paymentRoom">Room Number *</label>
+                        <select id="paymentRoom" required>
+                            <option value="">Select Room</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentMonth">Month Covered *</label>
+                        <select id="paymentMonth" required>
+                            <option value="">Select Month</option>
+                            <option value="January">January</option>
+                            <option value="February">February</option>
+                            <option value="March">March</option>
+                            <option value="April">April</option>
+                            <option value="May">May</option>
+                            <option value="June">June</option>
+                            <option value="July">July</option>
+                            <option value="August">August</option>
+                            <option value="September">September</option>
+                            <option value="October">October</option>
+                            <option value="November">November</option>
+                            <option value="December">December</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentYear">Year *</label>
+                        <select id="paymentYear" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="amountPaid">Amount Paid (KSh) *</label>
+                        <input type="number" id="amountPaid" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentMethod">Payment Method *</label>
+                        <select id="paymentMethod" required>
+                            <option value="">Select Method</option>
+                            <option value="Cash">Cash</option>
+                            <option value="M-Pesa">M-Pesa</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Record Payment</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Payment History -->
+<div class="table-container">
+    <h3>Payment History</h3>
+    <table id="paymentTable">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Room</th>
+                <th>Tenant</th>
+                <th>Month</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+        </section>
+
+        <!-- Receipts Section -->
+        <section id="receipts" class="section">
+            <div class="section-header">
+                <h2>Receipt Generation</h2>
+            </div>
+
+            <div class="form-container">
+                <h3>Generate Receipt</h3>
+                <form id="receiptForm">
+                    <div class="form-group">
+                        <label for="receiptRoom">Room Number *</label>
+                        <select id="receiptRoom" required>
+                            <option value="">Select Room</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="receiptMonth">Month *</label>
+                        <select id="receiptMonth" required>
+                            <option value="">Select Month</option>
+                            <option value="January">January</option>
+                            <option value="February">February</option>
+                            <option value="March">March</option>
+                            <option value="April">April</option>
+                            <option value="May">May</option>
+                            <option value="June">June</option>
+                            <option value="July">July</option>
+                            <option value="August">August</option>
+                            <option value="September">September</option>
+                            <option value="October">October</option>
+                            <option value="November">November</option>
+                            <option value="December">December</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="receiptYear">Year *</label>
+                        <select id="receiptYear" required></select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Generate & Download Receipt</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Receipt Preview -->
+            <div id="receiptPreview" class="receipt-preview" style="display: none;">
+                <div class="receipt-content" id="receiptContent"></div>
+            </div>
+        </section>
+    </div>
+    
+
+    <script src="script.js"></script>
+</body>
+</html>
